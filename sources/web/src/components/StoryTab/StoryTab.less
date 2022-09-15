@@ -1,0 +1,69 @@
+@import '../../global';
+
+.container {
+  padding: 12px 0;
+}
+
+.chapterCard {
+  transition: all 0.2s ease;
+  width: 100%;
+  border-radius: 4px;
+  font-size: 16px;
+  //border: 1px solidrgba(255, 255, 255, 0.06);
+  background: @card-background;
+  font-weight: bold;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .actionButton {
+    margin-left: 12px;
+  }
+}
+.chapterCard:hover {
+  //border-color: transparent;
+  background: @card-background;
+  //color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.01);
+  box-shadow: 0 1px 2px -2px rgb(0 0 0 / 64%), 0 3px 6px 0 rgb(0 0 0 / 48%),
+    0 5px 12px 4px rgb(0 0 0 / 36%);
+
+  .actionButton {
+    margin-left: 12px;
+    //color: white;
+  }
+}
+.chapterCard:active {
+  transform: scale(1);
+  box-shadow: none;
+}
+.chapterCardDelete {
+  background: #ccc;
+  border: 1px solid #ccc;
+  width: 100%;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chapterCard:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+.chapterCardDelete:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+.noChapterTip {
+  margin: 24px auto;
+  padding: 24px 0;
+  font-size: 16px;
+  color: #ccc;
+  text-align: center;
+}

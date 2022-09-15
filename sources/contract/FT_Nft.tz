@@ -1,0 +1,307 @@
+{ parameter
+    (or (or (or (pair %addTokenMetadata
+                   (map %metadata string bytes)
+                   (address %owner)
+                   (nat %token_id))
+                (pair %balance_of
+                   (list %requests (pair (address %owner) (nat %token_id)))
+                   (contract %callback
+                      (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance))))))
+            (or (unit %pause) (big_map %setMetadata string bytes)))
+        (or (or (list %transfer
+                   (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount)))))
+                (unit %unpause))
+            (or (address %updateAdmin)
+                (list %update_operators
+                   (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
+                       (pair %remove_operator (address %owner) (address %operator) (nat %token_id))))))) ;
+  storage
+    (pair (address %admin)
+          (bool %paused)
+          (nat %nextTokenId)
+          (big_map %ledger (pair (address %owner) (nat %token_id)) nat)
+          (big_map %operators (pair (address %owner) (address %operator) (nat %token_id)) unit)
+          (big_map %token_metadata nat (pair (nat %token_id) (map %token_info string bytes)))
+          (big_map %metadata string bytes)) ;
+  code { NIL operation ;
+         SWAP ;
+         UNPAIR ;
+         IF_LEFT
+           { IF_LEFT
+               { IF_LEFT
+                   { PUSH mutez 0 ;
+                     AMOUNT ;
+                     COMPARE ;
+                     GT ;
+                     IF { PUSH string "dont send tez" ; FAILWITH } {} ;
+                     DUP 2 ;
+                     DUP 3 ;
+                     GET 11 ;
+                     DUP 3 ;
+                     CAR ;
+                     DUP 5 ;
+                     GET 5 ;
+                     PAIR ;
+                     DUP 5 ;
+                     GET 5 ;
+                     SWAP ;
+                     SOME ;
+                     SWAP ;
+                     UPDATE ;
+                     UPDATE 11 ;
+                     DUP ;
+                     DUP 2 ;
+                     GET 7 ;
+                     DIG 2 ;
+                     GET 5 ;
+                     DIG 4 ;
+                     GET 5 ;
+                     DIG 4 ;
+                     GET 3 ;
+                     PAIR ;
+                     SWAP ;
+                     SOME ;
+                     SWAP ;
+                     UPDATE ;
+                     UPDATE 7 ;
+                     DUP ;
+                     PUSH int 1 ;
+                     ABS ;
+                     DIG 2 ;
+                     GET 5 ;
+                     ADD ;
+                     UPDATE 5 ;
+                     SWAP }
+                   { DIG 2 ;
+                     DROP ;
+                     DUP 2 ;
+                     NIL operation ;
+                     DUP 3 ;
+                     CDR ;
+                     PUSH mutez 0 ;
+                     DIG 4 ;
+                     CAR ;
+                     MAP { DUP 6 ;
+                           GET 7 ;
+                           DUP 2 ;
+                           GET ;
+                           IF_NONE { PUSH nat 0 } {} ;
+                           SWAP ;
+                           PAIR } ;
+                     DIG 5 ;
+                     DROP ;
+                     TRANSFER_TOKENS ;
+                     CONS } }
+               { IF_LEFT
+                   { DROP ;
+                     DUP ;
+                     CAR ;
+                     SENDER ;
+                     COMPARE ;
+                     NEQ ;
+                     IF { PUSH string "access denied" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     AMOUNT ;
+                     COMPARE ;
+                     GT ;
+                     IF { PUSH string "dont send tez" ; FAILWITH } {} ;
+                     DUP ;
+                     GET 3 ;
+                     IF { PUSH string "FA2_ALREADY_PAUSED" ; FAILWITH } {} ;
+                     PUSH bool True ;
+                     UPDATE 3 }
+                   { PUSH mutez 0 ;
+                     AMOUNT ;
+                     COMPARE ;
+                     GT ;
+                     IF { PUSH string "dont send tez" ; FAILWITH } {} ;
+                     DUP 2 ;
+                     CAR ;
+                     SENDER ;
+                     COMPARE ;
+                     NEQ ;
+                     IF { PUSH string "access denied" ; FAILWITH } {} ;
+                     UPDATE 12 } ;
+                 SWAP } }
+           { IF_LEFT
+               { IF_LEFT
+                   { ITER { SWAP ;
+                            SENDER ;
+                            DUP 3 ;
+                            CAR ;
+                            DIG 2 ;
+                            DIG 3 ;
+                            CDR ;
+                            ITER { SWAP ;
+                                   PUSH string "FA2_NOT_OPERATOR" ;
+                                   DUP 2 ;
+                                   GET 9 ;
+                                   DUP 4 ;
+                                   GET 3 ;
+                                   DUP 7 ;
+                                   DUP 7 ;
+                                   PAIR 3 ;
+                                   MEM ;
+                                   DUP 6 ;
+                                   DUP 6 ;
+                                   COMPARE ;
+                                   EQ ;
+                                   OR ;
+                                   IF { DROP } { FAILWITH } ;
+                                   DUP 2 ;
+                                   GET 3 ;
+                                   DUP 4 ;
+                                   PAIR ;
+                                   DUP 3 ;
+                                   GET 3 ;
+                                   DUP 4 ;
+                                   CAR ;
+                                   PAIR ;
+                                   DUP 3 ;
+                                   GET 7 ;
+                                   DUP 5 ;
+                                   GET 3 ;
+                                   DUP 7 ;
+                                   PAIR ;
+                                   GET ;
+                                   IF_NONE { PUSH nat 0 } {} ;
+                                   DUP 5 ;
+                                   GET 4 ;
+                                   DUP 2 ;
+                                   COMPARE ;
+                                   LT ;
+                                   IF { PUSH string "FA2_INSUFFICIENT_BALANCE" ; FAILWITH } {} ;
+                                   PUSH nat 0 ;
+                                   DUP 6 ;
+                                   GET 4 ;
+                                   COMPARE ;
+                                   EQ ;
+                                   DUP 6 ;
+                                   CAR ;
+                                   DUP 8 ;
+                                   COMPARE ;
+                                   EQ ;
+                                   OR ;
+                                   IF { SWAP ; DIG 2 ; DIG 4 ; DROP 4 }
+                                      { DUP 4 ;
+                                        DUP 5 ;
+                                        GET 7 ;
+                                        DUP 7 ;
+                                        GET 4 ;
+                                        DIG 3 ;
+                                        SUB ;
+                                        ABS ;
+                                        DUP 5 ;
+                                        SWAP ;
+                                        SOME ;
+                                        SWAP ;
+                                        UPDATE ;
+                                        UPDATE 7 ;
+                                        PUSH nat 0 ;
+                                        SOME ;
+                                        DUP 2 ;
+                                        GET 7 ;
+                                        DUP 5 ;
+                                        GET ;
+                                        COMPARE ;
+                                        EQ ;
+                                        IF { UNIT ;
+                                             DUP 2 ;
+                                             DIG 2 ;
+                                             GET 7 ;
+                                             DIG 4 ;
+                                             NONE nat ;
+                                             SWAP ;
+                                             UPDATE ;
+                                             UPDATE 7 }
+                                           { DIG 2 ; DROP ; UNIT ; SWAP } ;
+                                        SWAP ;
+                                        DROP ;
+                                        DUP ;
+                                        GET 7 ;
+                                        DIG 4 ;
+                                        GET 4 ;
+                                        DIG 4 ;
+                                        GET 7 ;
+                                        DUP 5 ;
+                                        GET ;
+                                        IF_NONE { PUSH nat 0 } {} ;
+                                        ADD ;
+                                        DIG 3 ;
+                                        SWAP ;
+                                        SOME ;
+                                        SWAP ;
+                                        UPDATE ;
+                                        UPDATE 7 } } ;
+                            SWAP ;
+                            DIG 2 ;
+                            DROP 2 } }
+                   { DROP ;
+                     DUP ;
+                     CAR ;
+                     SENDER ;
+                     COMPARE ;
+                     NEQ ;
+                     IF { PUSH string "access denied" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     AMOUNT ;
+                     COMPARE ;
+                     GT ;
+                     IF { PUSH string "dont send tez" ; FAILWITH } {} ;
+                     DUP ;
+                     GET 3 ;
+                     NOT ;
+                     IF { PUSH string "FA2_ALREADY_UNPAUSED" ; FAILWITH } {} ;
+                     PUSH bool False ;
+                     UPDATE 3 } }
+               { IF_LEFT
+                   { PUSH mutez 0 ;
+                     AMOUNT ;
+                     COMPARE ;
+                     GT ;
+                     IF { PUSH string "dont send tez" ; FAILWITH } {} ;
+                     DUP 2 ;
+                     CAR ;
+                     SENDER ;
+                     COMPARE ;
+                     NEQ ;
+                     IF { PUSH string "access denied" ; FAILWITH } {} ;
+                     UPDATE 1 }
+                   { ITER { IF_LEFT
+                              { DUP ;
+                                CAR ;
+                                SENDER ;
+                                COMPARE ;
+                                NEQ ;
+                                IF { DROP ; PUSH string "FA2_NOT_OWNER" ; FAILWITH }
+                                   { UNIT ;
+                                     DUP 3 ;
+                                     DIG 3 ;
+                                     GET 9 ;
+                                     UNIT ;
+                                     DIG 4 ;
+                                     SWAP ;
+                                     SOME ;
+                                     SWAP ;
+                                     UPDATE ;
+                                     UPDATE 9 } }
+                              { DUP ;
+                                CAR ;
+                                SENDER ;
+                                COMPARE ;
+                                NEQ ;
+                                IF { DROP ; PUSH string "FA2_NOT_OWNER" ; FAILWITH }
+                                   { UNIT ;
+                                     DUP 3 ;
+                                     DIG 3 ;
+                                     GET 9 ;
+                                     DIG 3 ;
+                                     NONE unit ;
+                                     SWAP ;
+                                     UPDATE ;
+                                     UPDATE 9 } } ;
+                            SWAP ;
+                            DROP } } } ;
+             SWAP } ;
+         PAIR } }
+

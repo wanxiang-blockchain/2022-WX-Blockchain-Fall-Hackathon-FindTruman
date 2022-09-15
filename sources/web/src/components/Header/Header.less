@@ -1,0 +1,66 @@
+@import '../../global';
+
+.fixedHeader {
+  width: 100%;
+  z-index: 9;
+  padding: 0 128px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  min-width: 1256px;
+}
+.header {
+  height: 56px;
+}
+
+.menus {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.right {
+  display: flex;
+  align-items: center;
+}
+
+.menuItem {
+  font-family: TieJi;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: @theme-color-4;
+  transition: all 0.3s ease;
+}
+.menuItem:hover {
+  color: @theme-color-6;
+}
+.menuItem:not(:last-child) {
+  margin-right: 24px;
+}
+.menuItemActive {
+  color: @theme-color-6;
+}
+.menuItemEllipsis {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: nowrap;
+}
+
+.extraLink {
+  font-family: TieJi;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.extraLink:hover {
+  opacity: 0.65;
+}

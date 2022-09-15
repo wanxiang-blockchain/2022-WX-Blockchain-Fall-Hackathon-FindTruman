@@ -1,0 +1,339 @@
+type story = 
+// @layout:comb
+{
+    author: address,
+    cid: string
+};
+
+type stories = big_map<nat, story>;
+
+type storyUpdata = 
+// @layout:comb
+{
+    storyId: nat,
+    cid: string
+};
+
+type storyNftPublish_post = 
+// @layout:comb
+{
+    storyId: nat,
+    name: string,
+    image: string,
+    description: string,
+    uriPrefix: string,
+    token: address,
+    price: nat,
+    total: nat,
+    authorReserve: nat
+};
+
+type storyNftPublish = 
+// @layout:comb
+{
+    storyId: nat,
+    name: string,
+    image: string,
+    description: string,
+    uriPrefix: string,
+    token: address,
+    price: nat,
+    total: nat,
+    authorReserve: nat,
+    sold: nat,
+    authorClaimed: nat
+};
+
+type txs = 
+// @layout:comb
+{
+    to_: address,
+    token_id: nat,
+    amount: nat
+};
+
+type transfer = 
+// @layout:comb
+{
+    from_: address,
+    txs: list<txs>
+};
+
+type transfer_param_type = list<transfer>;
+
+type token_metadata_value = 
+// @layout:comb
+{
+    token_id: nat,
+    token_info: map<string, bytes>
+};
+
+type token_metadata = big_map<nat, token_metadata_value>;
+
+type token_id = nat;
+
+type ledger_key = 
+// @layout:comb
+{
+    owner: address,
+    token_id: token_id
+};
+
+type update_operator_action_params_type = 
+// @layout:comb
+{
+    owner: address,
+    operator: address,
+    token_id: nat
+};
+
+type initial_storage = 
+// @layout:comb
+{
+    admin: address,
+    paused: bool,
+    nextTokenId: nat,
+    ledger: big_map<ledger_key, nat>,
+    operators: big_map<update_operator_action_params_type, unit>,
+    token_metadata: big_map<nat, token_metadata_value>,
+    metadata: big_map<string, bytes>
+};
+
+type tokenMetadataParams = 
+// @layout:comb
+{
+    metadata: map<string, bytes>,
+    owner: address,
+    token_id: token_id
+};
+
+type storage = 
+// @layout:comb
+{
+    nextId: nat,
+    storyMap: stories,
+    storyNftMap: big_map<nat, storyNftPublish>,
+    nftMap: big_map<nat, address>
+};
+
+type parameter =
+| ["publishStory", string]
+| ["updateStory", storyUpdata]
+| ["publishStoryNft", storyNftPublish_post]
+| ["mintStoryNft", nat];
+
+type action = | ["Transfer", transfer_param_type];
+
+type manipulate =  | ["AddTokenMetadata", tokenMetadataParams];
+
+type return_ = [list<operation>, storage];
+
+const nat2str = (num_: nat): string => {
+  let str = "";
+  let num = num_;
+  
+  while (num != (0 as nat)) {
+    let posNum = num % (10 as nat);
+    switch(posNum) {
+      case (0 as nat):
+        str = "0" + str;
+        break;
+      case (1 as nat):
+        str = "1" + str;
+        break;
+      case (2 as nat):
+        str = "2" + str;
+        break;
+      case (3 as nat):
+        str = "3" + str;
+        break;
+      case (4 as nat):
+        str = "4" + str;
+        break;
+      case (5 as nat):
+        str = "5" + str;
+        break;
+      case (6 as nat):
+        str = "6" + str;
+        break;
+      case (7 as nat):
+        str = "7" + str;
+        break;
+      case (8 as nat):
+        str = "8" + str;
+        break;
+      case (9 as nat):
+        str = "9" + str;
+        break;
+    };
+    num = num / (10 as nat);
+  }
+  return str;
+};
+
+const publishStory = ([cid, store] : [string, storage]): return_ =>{
+    const new_story: story = {
+        author: Tezos.get_sender(),
+        cid: cid
+    };
+    const story_map = Big_map.add(store.nextId, new_story, store.storyMap);
+    const new_nextId = store.nextId + (1 as nat);
+
+    // Notifies the server of story updates
+
+    return [(list([]) as list<operation>), ({...store, storyMap: story_map, nextId: new_nextId})]
+};
+
+const updateStory = ([updata_story, store] : [storyUpdata, storage]): return_ =>{
+    const existJudge: bool = Big_map.mem((updata_story.storyId as nat), store.storyMap);
+    const storyInfo = Option.unopt(Big_map.find_opt((updata_story.storyId as nat), store.storyMap));
+    // Check if the story for the ID exists
+    if (existJudge == true){
+        // Check whether the current user is the author
+        if (storyInfo.author == Tezos.get_sender()){
+            // Updata
+            const new_story: story = {
+                author: Tezos.get_sender(),
+                cid: updata_story.cid
+            };
+            const story_map = Big_map.update(updata_story.storyId as nat, Some(new_story), store.storyMap);
+
+            // Notifies the server of story updates
+
+            return [(list([]) as list<operation>), ({...store, storyMap: story_map})];
+        } else {
+            return [(list([]) as list<operation>), (failwith("IS NOT THE AUTHOR") as storage)];
+        };
+    } else {
+        return [(list([]) as list<operation>), (failwith("N0 STORY ID") as storage)];
+    };
+};
+
+const publishStoryNft = ([storyNft_publish, store] : [storyNftPublish_post, storage]): return_ =>{
+    let existJudge: bool = Big_map.mem((storyNft_publish.storyId as nat), store.storyMap);
+    const storyInfo = Option.unopt(Big_map.find_opt((storyNft_publish.storyId as nat), store.storyMap));
+    if (existJudge == true){
+        if (storyInfo.author == Tezos.get_sender()){
+            // Write information to map
+            let storyNft_storage: storyNftPublish = {
+                    storyId: storyNft_publish.storyId,
+                    name: storyNft_publish.name,
+                    image: storyNft_publish.image,
+                    description: storyNft_publish.description,
+                    uriPrefix: storyNft_publish.uriPrefix,
+                    token: storyNft_publish.token,
+                    price: storyNft_publish.price,
+                    total: storyNft_publish.total,
+                    authorReserve: storyNft_publish.authorReserve,
+                    sold: 0 as nat,
+                    authorClaimed: 0 as nat
+            }
+            const storyNft_map = Big_map.add(storyNft_publish.storyId, storyNft_storage, store.storyNftMap);
+
+            // Create a NFT contract (The address of the currently running contract is set to admin)
+
+            let initialStorage: initial_storage = {
+                    admin: Tezos.get_self_address() as address,
+                    paused: false as bool,
+                    nextTokenId: (1 as nat),
+                    ledger: Big_map.literal(list([])) as big_map<ledger_key, nat>,
+                    operators: Big_map.literal(list([])) as big_map<update_operator_action_params_type, unit>,
+                    token_metadata: Big_map.literal(list([])) as big_map<nat, token_metadata_value>,
+                    metadata: Big_map.literal(list([
+                        ["", 0x74657a6f732d73746f726167653a636f6e74656e7473 as bytes],
+                        ["contents", 0x7b2276657273696f6e223a22312e30222c226e616d65223a2273746f7279466163746f7279222c22617574686f7273223a5b224654225d2c226465736372697074696f6e223a2254657a6f732053746f727920466163746f7279222c22696e7465726661636573223a5b22545a49502d303132222c22545a49502d303136225d7d as bytes]
+                    ])) as big_map<string, bytes>
+            };
+
+            let initialDelegate : option<key_hash> = (None() as option<key_hash>);
+            let initialAmount : tez = 0 as tez;
+            let createMyContract = (p: [option<key_hash>, tez, initial_storage]) : [operation, address] =>
+                (Michelson `{ 
+                    UNPAIR ;
+                    UNPAIR ;
+                    CREATE_CONTRACT 
+#include     "FT_Nft.tz"  
+                    ;
+                    PAIR }`
+                    as ((p: [option<key_hash>, tez, initial_storage]) => [operation, address]) )(p);
+
+            let originate : [operation, address] = createMyContract(initialDelegate, initialAmount, initialStorage);
+            let new_nftMap = Big_map.add(storyNft_publish.storyId, originate[1], store.nftMap);          
+
+            // Notifies the server of storyNft updates
+
+            return [(list([originate[0]]) as list<operation>), ({...store, storyNftMap: storyNft_map, nftMap: new_nftMap})];
+        } else {
+            return [(list([]) as list<operation>), (failwith("IS NOT THE AUTHOR") as storage)];
+        };
+    } else {
+        return [(list([]) as list<operation>), (failwith("N0 STORY ID") as storage)];
+    };
+};
+
+const mintStoryNft = ([story_id, store] : [nat, storage]): return_ =>{
+    const existJudge: bool = Big_map.mem((story_id as nat), store.storyNftMap);
+    if (existJudge == true){
+        // Get NFT price and story author (as transfer recipient)
+        const storyNftInfo = Option.unopt(Big_map.find_opt((story_id as nat), store.storyNftMap));
+        const price = storyNftInfo.price as nat;
+        const storyInfo = Option.unopt(Big_map.find_opt((story_id as nat), store.storyMap));
+        const author = storyInfo.author;
+        // Determine whether the upper limit has been reached
+        if ((storyNftInfo.sold + storyNftInfo.authorReserve) < storyNftInfo.total){
+            // Transfer token
+            const counter: contract<action> =
+                match(Tezos.get_entrypoint_opt("%transfer" as string, storyNftInfo.token as address) as option<contract<action>>, {
+                    Some: ( c: contract<action>) => c,
+                    None: () => (failwith ("contract does not match") as contract<action>)
+                });
+            const tr :transfer_param_type = 
+                        list([({
+                            from_: Tezos.get_sender() as address,
+                            txs: list([{
+                                to_: author as address,
+                                token_id: 0 as nat,
+                                amount: price as nat
+                            }]) as list<txs>
+                        })]);
+            const op: operation = Tezos.transaction(Transfer(tr), 0 as tez, counter);
+            // Update the number of copies sold
+            const new_sold = storyNftInfo.sold + (1 as nat);
+            let updata_storyNftPublish = (storyNftInfo: storyNftPublish): storyNftPublish => ({...storyNftInfo, sold: new_sold})
+            const new_storyNftPublish = Big_map.update(storyNftInfo.storyId as nat, Some(updata_storyNftPublish(storyNftInfo)), store.storyNftMap);
+            // mint NFT
+            const nftContractAddress : address = Option.unopt(Big_map.find_opt((story_id as nat), store.nftMap));
+            const contractAdd: contract<manipulate> =
+                match(Tezos.get_entrypoint_opt("%addTokenMetadata" as string, nftContractAddress as address) as option<contract<manipulate>>, {
+                    Some: ( x: contract<manipulate>) => x,
+                    None: () => (failwith ("contract does not match") as contract<manipulate>)
+                });
+            // set token_metadata and ledger
+            let token_info_string: string = storyNftInfo.uriPrefix + "/" + nat2str(storyNftInfo.sold + (1 as nat)) + ".json";
+            //let token_info_string: string = ""
+            let token_info_bytes: bytes = Bytes.sub(6 as nat, abs(Bytes.length(Bytes.pack(token_info_string)) - (6 as nat)) ,Bytes.pack(token_info_string));
+            const addAdd :tokenMetadataParams = {
+                metadata: Map.literal(list([
+                    ["", token_info_bytes as bytes]
+                ])),
+                owner: Tezos.get_sender(),
+                token_id: storyNftInfo.sold + (1 as nat)
+            };
+            const ma: operation = Tezos.transaction(AddTokenMetadata(addAdd), 0 as tez, contractAdd);
+            return [(list([op, ma]) as list<operation>), {...store, storyNftMap: new_storyNftPublish}];
+        } else {
+            return [(list([]) as list<operation>), (failwith("STORY NFT SOLD OUT") as storage)];
+        };
+    } else {
+        return [(list([]) as list<operation>), (failwith("N0 STORY NFT") as storage)];
+    };
+};
+
+// main
+const main = ([para, store]: [parameter, storage]): return_ =>
+  match(para, {
+    publishStory: (cid: string) => publishStory(cid, store),
+    updateStory: (updata_story: storyUpdata) => updateStory(updata_story, store),
+    publishStoryNft: (storyNft_publish: storyNftPublish_post) => publishStoryNft(storyNft_publish, store),
+    mintStoryNft: (story_id: nat) => mintStoryNft(story_id, store)
+  });

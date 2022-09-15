@@ -1,0 +1,59 @@
+@import '../../global';
+
+.header {
+  display: flex;
+  align-items: center;
+  column-gap: 12px;
+  //justify-content: space-between;
+  margin-bottom: 24px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.deployTip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  //text-align: center;
+  column-gap: 4px;
+  font-size: 14px;
+  color: @theme-color-6;
+  font-weight: bold;
+  margin: 6px 0;
+}
+
+.chainSelector {
+  margin-bottom: 24px;
+}
+.chainSelectorTitle {
+  font-size: 16px;
+  margin-bottom: 8px;
+  //font-weight: bold;
+}
+.chainItemRow {
+  display: flex;
+  gap: 8px;
+  white-space: pre-wrap;
+}
+
+.chainItem {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  background: @card-background;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+.chainItem:hover {
+  border-color: transparent;
+  background: @theme-color-6;
+}
+.chainItemSelected {
+  border-color: transparent;
+  background: @theme-color-6;
+}
+.chainItemIcon {
+  height: 14px;
+}

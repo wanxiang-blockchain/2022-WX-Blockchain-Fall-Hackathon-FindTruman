@@ -1,0 +1,53 @@
+@import '../../../../global';
+
+.header {
+  position: fixed;
+  top: 88px;
+  min-width: 1000px;
+  width: calc(100% - 256px);
+}
+
+.container {
+  padding: 0 48px;
+  width: 1000px;
+  margin: 24px auto;
+}
+
+.title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 40px;
+  color: @theme-color-6;
+}
+
+.content {
+  margin: 24px auto 128px auto;
+}
+
+.actionButtonRow {
+  width: calc(100% - 256px);
+  min-width: 1000px;
+  position: fixed;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.actionButton {
+}
+.actionButton:not(:last-child) {
+  margin-right: 12px;
+}
+
+.notFoundTip {
+  height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 24px;
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.85);
+}
